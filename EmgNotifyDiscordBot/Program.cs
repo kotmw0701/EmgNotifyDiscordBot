@@ -15,6 +15,7 @@ namespace EmgNotifyDiscordBot {
         private IServiceProvider services;
 
         static void Main(string[] args) {
+            
             new Program().MainAsync().GetAwaiter().GetResult();
         }
 
