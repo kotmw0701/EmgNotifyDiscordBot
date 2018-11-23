@@ -32,38 +32,50 @@ namespace EmgNotifyDiscordBot {
             var streaming = client.GetUserStreaming();
 
             streaming.OnUpdate += (sender, e) => {
-                //if (e.Status.Account.AccountName != "elebot1st") return;
-                //string content = Regex.Replace(e.Status.Content, @"<(p|/p|br /)>", "");
-                //if (!content.Contains("PSO2緊急クエスト予告")) return;
-
-                string[] servers = new string[10];
-                for (int i = 0; i < 10; i++) servers[i] = "―";
-                
-                dicordClient.GetGuild(427091125170601985).GetTextChannel(427101602093072384).SendMessageAsync("**これはテスト投稿です**", false, CreateEmbed(null, servers));
+                if (e.Status.Account.AccountName != "elebot1st") return;
+                string content = Regex.Replace(e.Status.Content.Replace("</p><p>", "|"), @"<(p|/p)>", "").Replace("<br />", "|").Replace("#PSO2", "");
+                if (!content.Contains("PSO2緊急クエスト予告")) return;
+                var (notice, servers, league, nowLeague) = ParseData(content);
+                dicordClient.GetGuild(427091125170601985).GetTextChannel(427101602093072384).SendMessageAsync("", false, CreateEmbed(notice, servers, league, nowLeague));
             };
 
             await streaming.Start();
         }
 
-        public Embed CreateEmbed(string notice, string[] servers) {
+        public Embed CreateEmbed(string notice, string[] servers, string league, bool nowLeague) {
             var builder = new EmbedBuilder {
                 Title = $"{DateTime.Now.AddHours(1).ToString("HH")} 時の緊急クエストっきゅ",
-                Color = Color.Gold,
-                Fields = new List<EmbedFieldBuilder> {
-                    new EmbedFieldBuilder().WithName("予告緊急").WithValue(notice ?? "予告緊急はありません。").WithIsInline(false),
-                    new EmbedFieldBuilder().WithName("1鯖").WithValue(servers[0]).WithIsInline(true),
-                    new EmbedFieldBuilder().WithName("2鯖").WithValue(servers[1]).WithIsInline(true),
-                    new EmbedFieldBuilder().WithName("3鯖").WithValue(servers[2]).WithIsInline(true),
-                    new EmbedFieldBuilder().WithName("4鯖").WithValue(servers[3]).WithIsInline(true),
-                    new EmbedFieldBuilder().WithName("5鯖").WithValue(servers[4]).WithIsInline(true),
-                    new EmbedFieldBuilder().WithName("6鯖").WithValue(servers[5]).WithIsInline(true),
-                    new EmbedFieldBuilder().WithName("7鯖").WithValue(servers[6]).WithIsInline(true),
-                    new EmbedFieldBuilder().WithName("8鯖").WithValue(servers[7]).WithIsInline(true),
-                    new EmbedFieldBuilder().WithName("9鯖").WithValue(servers[8]).WithIsInline(true),
-                    new EmbedFieldBuilder().WithName("10鯖").WithValue(servers[9]).WithIsInline(true)
-                }
+                Color = Color.Gold
             };
+            builder.AddField("予告緊急", string.IsNullOrEmpty(notice) ? "予告緊急はありません" : notice);
+            List<string> checker = new List<string>(servers);
+            checker.RemoveAll(check => string.IsNullOrEmpty(check));
+            if(checker.Count > 0) for (int i = 0; i < 10; i++) builder.AddInlineField($"{i+1}鯖", string.IsNullOrEmpty(servers[i]) ? "―" : servers[i]);
+            builder.AddField(nowLeague ? "⚠アークスリーグ開催中⚠" : "アークスリーグ予定", league);
             return builder.Build();
+        }
+
+
+        public (string notice, string[] servers, string league, bool nowLeague) ParseData(string text) {
+            string[] brArray = text.Split("|");
+            string[] servers = new string[10];
+            StringBuilder league = new StringBuilder(), notice = new StringBuilder();
+            bool nowLeague = false;
+            for (int i = 1; i < brArray.Length; i++) {
+                string line = brArray[i];
+                if (Regex.IsMatch(line, "アークスリーグ")) {
+                    nowLeague = line.Contains("開催中");
+                    league.AppendLine(brArray[i + 1]).AppendLine(brArray[i + 2]);
+                    break;
+                }
+                if (Regex.IsMatch(line, @"^\d{2}")) {//ランダム緊急
+                    string[] split = line.Split(":");
+                    int num = Int32.Parse(split[0])-1;
+                    servers[num] = Regex.IsMatch(split[1], "[発生中.*]") ? "" : split[1];
+                } else if (Regex.IsMatch(line, "^【.*】")) //予告緊急
+                    notice.AppendLine(Regex.Replace(line, "^【.*】", ""));
+            }
+            return (notice.ToString(), servers, league.ToString(), nowLeague);
         }
     }
 }
