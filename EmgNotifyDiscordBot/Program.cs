@@ -56,7 +56,6 @@ namespace EmgNotifyDiscordBot {
 
             if (!(message.HasCharPrefix('!', ref argPos)
                 || message.HasMentionPrefix(client.CurrentUser, ref argPos))) return;
-
             var context = new CommandContext(client, message);
 
             var result = await commands.ExecuteAsync(context, argPos, services);
