@@ -41,23 +41,25 @@ namespace EmgNotifyDiscordBot {
 
             var streaming = client.GetUserStreaming();
 
-            streaming.OnUpdate += async (sender, e) => {
-                //if (e.Status.Account.AccountName != "elebot1st") return;
-                string content = Regex.Replace(e.Status.Content.Replace("</p><p>", "|"), @"<(p|/p)>", "").Replace("<br />", "|");
-                if (content.IndexOf("|") < 0) return;
-                string head = content.Substring(0, content.IndexOf("|"));
-                content = content.Substring(content.IndexOf("|") + 1, content.Length - content.IndexOf("|") - 1);
-                if (Regex.IsMatch(head, $"{DateTime.Now.ToString("HH")}:\\d{{2}}続報")) {
-                    embedData.isFollow = true;
-                    embedData.servers = FollowData(Regex.Replace(content, @"<a.*/a>", ""), embedData.servers);
-                    await restMessage.DeleteAsync();
-                } else if (!head.Contains("PSO2緊急クエスト予告")) return;
-                else embedData = ParseData(content);
-                restMessage = await dicordClient.GetGuild(427091125170601985).GetTextChannel(427101602093072384)
-                                    .SendMessageAsync(betaTest ? "**現在テスト中です**" : "", false, CreateEmbed(embedData.notice, embedData.servers, embedData.league, embedData.nowLeague, embedData.isFollow));
-            };
+            streaming.OnUpdate += async (sender, e) => await OnMessageRecieve(sender, e);
 
             await streaming.Start();
+        }
+
+        private async Task OnMessageRecieve(object sender, StreamUpdateEventArgs args) {
+            if (args.Status.Account.AccountName != "elebot1st") return;
+            string content = Regex.Replace(args.Status.Content.Replace("</p><p>", "|"), @"<(p|/p)>", "").Replace("<br />", "|");
+            if (content.IndexOf("|") < 0) return;
+            string head = content.Substring(0, content.IndexOf("|"));
+            content = content.Substring(content.IndexOf("|") + 1, content.Length - content.IndexOf("|") - 1);
+            if (Regex.IsMatch(head, $"{DateTime.Now.ToString("HH")}:\\d{{2}}続報")) {
+                embedData.isFollow = true;
+                embedData.servers = FollowData(Regex.Replace(content, @"<a.*/a>", ""), embedData.servers);
+                await restMessage.DeleteAsync();
+            } else if (!head.Contains("PSO2緊急クエスト予告")) return;
+            else embedData = ParseData(content);
+            restMessage = await dicordClient.GetGuild(427091125170601985).GetTextChannel(427101602093072384)
+                                .SendMessageAsync(betaTest ? "**現在テスト中です**" : "", false, CreateEmbed(embedData.notice, embedData.servers, embedData.league, embedData.nowLeague, embedData.isFollow));
         }
 
         public Embed CreateEmbed(string notice, string[] servers, string league, bool nowLeague, bool isFollow) {
