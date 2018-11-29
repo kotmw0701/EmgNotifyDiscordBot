@@ -63,8 +63,13 @@ namespace EmgNotifyDiscordBot {
         }
 
         public Embed CreateEmbed(string notice, string[] servers, string league, bool nowLeague, bool isFollow) {
+            DateTime time = DateTime.Now;
+            Console.WriteLine($"Time    : {time.ToString("yyMMddHH")}");
+            Console.WriteLine($"Notice  : {notice}");
+            Console.WriteLine($"Servers : [{string.Join(" , ", servers)}]");
+            Console.WriteLine($"League  : {league}");
             var builder = new EmbedBuilder {
-                Title = $"{DateTime.Now.AddHours(1).ToString("HH")} 時の緊急クエストです",
+                Title = $"{time.AddHours(1).ToString("HH")} 時の緊急クエストです",
                 Description = isFollow ? "❗❗続報がありました❗❗" : "",
                 Color = betaTest ? Color.Red : Color.Gold,
                 Author = new EmbedAuthorBuilder().WithName("エレボット1号")
@@ -93,11 +98,11 @@ namespace EmgNotifyDiscordBot {
                     break;
                 }
                 if (Regex.IsMatch(line, @"^\d{2}")) {//ランダム緊急
-                    string[] split = line.Split(":");
-                    int num = Int32.Parse(split[0]) - 1;
-                    if (Regex.IsMatch(split[1], "[発生中.*]")
-                        || Regex.IsMatch(split[1], $"({DateTime.Now.AddHours(-2).ToString("HH")}時 .*)")) continue;
-                    servers[num] = split[1];
+                    int num = Int32.Parse(Regex.Matches(line, @"^\d{2}")[0].Value);
+                    string emg = line.Substring(3);
+                    if (Regex.IsMatch(emg, "[発生中.*]")
+                        || Regex.IsMatch(emg, @"(\d{2} .*)")) continue;
+                    servers[num] = emg;
                 } else if (Regex.IsMatch(line, "^【.*】")) //予告緊急
                     notice.AppendLine(Regex.Replace(line, "^【.*】", ""));
             }
