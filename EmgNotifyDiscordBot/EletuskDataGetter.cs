@@ -98,11 +98,12 @@ namespace EmgNotifyDiscordBot {
                     break;
                 }
                 if (Regex.IsMatch(line, @"^\d{2}")) {//ランダム緊急
-                    int num = Int32.Parse(Regex.Matches(line, @"^\d{2}")[0].Value);
+                    int num = Int32.Parse(Regex.Matches(line, @"^\d{2}")[0].Value)-1;
                     string emg = line.Substring(3);
                     if (Regex.IsMatch(emg, "[発生中.*]")
                         || Regex.IsMatch(emg, @"(\d{2} .*)")) continue;
                     servers[num] = emg;
+                    Console.WriteLine(line);
                 } else if (Regex.IsMatch(line, "^【.*】")) //予告緊急
                     notice.AppendLine(Regex.Replace(line, "^【.*】", ""));
             }
