@@ -65,9 +65,9 @@ namespace EmgNotifyDiscordBot {
         public Embed CreateEmbed(string notice, string[] servers, string league, bool nowLeague, bool isFollow) {
             DateTime time = DateTime.Now;
             Console.WriteLine($"Time    : {time.ToString("yyMMddHH")}");
-            Console.WriteLine($"Notice  : {notice}");
+            Console.WriteLine($"Notice  : {notice.Replace(Environment.NewLine, " ")}");
             Console.WriteLine($"Servers : [{string.Join(" , ", servers)}]");
-            Console.WriteLine($"League  : {league}");
+            Console.WriteLine($"League  : {league.Replace(Environment.NewLine, " ")}");
             var builder = new EmbedBuilder {
                 Title = $"{time.AddHours(1).ToString("HH")} 時の緊急クエストです",
                 Description = isFollow ? "❗❗続報がありました❗❗" : "",
