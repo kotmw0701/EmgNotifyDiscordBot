@@ -78,7 +78,7 @@ namespace EmgNotifyDiscordBot {
             };
             builder.AddField("予告緊急", string.IsNullOrEmpty(notice) ? "予告緊急はありません" : notice);
             List<string> checker = new List<string>(servers);
-            checker.RemoveAll(check => string.IsNullOrEmpty(check));
+            checker.RemoveAll(check => string.IsNullOrEmpty(check.Replace("―", "")));
             if (checker.Count > 0) for (int i = 0; i < 10; i++) builder.AddInlineField($"{i + 1}鯖", string.IsNullOrEmpty(servers[i]) ? "―" : servers[i]);
             if (!string.IsNullOrEmpty(league)) builder.AddField(nowLeague ? "⚠アークスリーグ開催中⚠" : "アークスリーグ予定", league);
             return builder.Build();
@@ -98,12 +98,11 @@ namespace EmgNotifyDiscordBot {
                     break;
                 }
                 if (Regex.IsMatch(line, @"^\d{2}")) {//ランダム緊急
-                    int num = Int32.Parse(Regex.Matches(line, @"^\d{2}")[0].Value)-1;
+                    int num = Int32.Parse(Regex.Matches(line, @"^\d{2}")[0].Value) - 1;
                     string emg = line.Substring(3);
-                    if (Regex.IsMatch(emg, "[発生中.*]")
-                        || Regex.IsMatch(emg, @"(\d{2} .*)")) continue;
+                    if (Regex.IsMatch(emg, "^[発生中.*]")
+                        || Regex.IsMatch(emg, @"^(\d{2}.*)")) continue;
                     servers[num] = emg;
-                    Console.WriteLine(line);
                 } else if (Regex.IsMatch(line, "^【.*】")) //予告緊急
                     notice.AppendLine(Regex.Replace(line, "^【.*】", ""));
             }
@@ -115,11 +114,11 @@ namespace EmgNotifyDiscordBot {
             string[] servers = before;
             foreach (string server in brArray) {
                 if (Regex.IsMatch(server, @"^\d{2}")) {
-                    string[] split = server.Split(":");
-                    int num = Int32.Parse(split[0]) - 1;
-                    if (Regex.IsMatch(split[1], "[発生中.*]")
-                        || Regex.IsMatch(split[1], $"({DateTime.Now.AddHours(-2).ToString("HH")}時 .*)")) continue;
-                    servers[num] = split[1];
+                    int num = Int32.Parse(Regex.Matches(server, @"^\d{2}")[0].Value) - 1;
+                    string emg = server.Substring(3);
+                    if (Regex.IsMatch(emg, "^[発生中.*]")
+                        || Regex.IsMatch(emg, @"^(\d{2}時.*)")) continue;
+                    servers[num] = emg;
                 }
             }
             return servers;
