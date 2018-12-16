@@ -76,8 +76,8 @@ namespace EmgNotifyDiscordBot {
                         .WithUrl(@"https://eletusk.club/@elebot1st")
                         .WithIconUrl(@"https://eletusk.club/system/accounts/avatars/000/001/642/original/ec186395ae173203.png")
             };
-            builder.AddField("予告緊急", string.IsNullOrEmpty(notice) ? "予告緊急はありません" : notice);
-            List<string> checker = new List<string>(servers);
+			if (!string.IsNullOrEmpty(notice)) builder.AddField("予告緊急", notice);
+			List<string> checker = new List<string>(servers);
             checker.RemoveAll(check => string.IsNullOrEmpty(check));
             if (checker.Count > 0) for (int i = 0; i < 10; i++) builder.AddInlineField($"{i + 1}鯖", string.IsNullOrEmpty(servers[i]) ? "―" : servers[i]);
             if (!string.IsNullOrEmpty(league)) builder.AddField(nowLeague ? "⚠アークスリーグ開催中⚠" : "アークスリーグ予定", league);
