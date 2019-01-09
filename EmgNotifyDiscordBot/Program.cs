@@ -21,8 +21,10 @@ namespace EmgNotifyDiscordBot {
 
             EletuskDataGetter getter = new EletuskDataGetter(manager.Client);
             await getter.Stream();
-            
-            await Task.Delay(-1);
+
+			Console.ReadLine();
+			await manager.Client.LogoutAsync();
+			Environment.Exit(0);
             
 
             //while (true) {
