@@ -21,7 +21,7 @@ namespace EmgNotifyDiscordBot {
 
             services = new ServiceCollection().BuildServiceProvider();
             Client.MessageReceived += MessageReceived;
-            await commands.AddModulesAsync(Assembly.GetEntryAssembly());
+            //await commands.AddModulesAsync(Assembly.GetEntryAssembly());
 
             await Client.LoginAsync(TokenType.Bot, Configration.Instance.Datas.DiscordToken);
             await Client.StartAsync();

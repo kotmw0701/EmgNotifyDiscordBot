@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace EmgNotifyDiscordBot {
     public class EletuskDataGetter {
 
-        private bool betaTest = false;
+        private bool betaTest = true;
 
         private DiscordSocketClient dicordClient;
         private RestUserMessage restMessage;
@@ -48,8 +48,9 @@ namespace EmgNotifyDiscordBot {
 
         private async Task OnMessageRecieve(object sender, StreamUpdateEventArgs args) {
             if (args.Status.Account.AccountName != "elebot1st") return;
-            string content = Regex.Replace(args.Status.Content.Replace("</p><p>", "|"), @"<(p|/p)>", "").Replace("<br />", "|");
-            if (content.IndexOf("|") < 0) return;
+			Console.WriteLine("Received");
+			string content = Regex.Replace(args.Status.Content.Replace("</p><p>", "|"), @"<(p|/p)>", "").Replace("<br />", "|");
+			if (content.IndexOf("|") < 0) return;
             string head = content.Substring(0, content.IndexOf("|"));
             content = content.Substring(content.IndexOf("|") + 1, content.Length - content.IndexOf("|") - 1);
             if (Regex.IsMatch(head, $"{DateTime.Now.ToString("HH")}:\\d{{2}}続報")) {
@@ -60,7 +61,8 @@ namespace EmgNotifyDiscordBot {
             else embedData = ParseData(content);
             restMessage = await dicordClient.GetGuild(427091125170601985).GetTextChannel(427101602093072384)
                                 .SendMessageAsync(betaTest ? "**現在テスト中です**" : "", false, CreateEmbed(embedData.notice, embedData.servers, embedData.league, embedData.nowLeague, embedData.isFollow));
-        }
+			Console.WriteLine("Sended");
+		}
 
         public Embed CreateEmbed(string notice, string[] servers, string league, bool nowLeague, bool isFollow) {
             DateTime time = DateTime.Now;
@@ -79,8 +81,9 @@ namespace EmgNotifyDiscordBot {
 			if (!string.IsNullOrEmpty(notice)) builder.AddField("予告緊急", notice);
 			List<string> checker = new List<string>(servers);
             checker.RemoveAll(check => string.IsNullOrEmpty(check));
-            if (checker.Count > 0) for (int i = 0; i < 10; i++) builder.AddInlineField($"{i + 1}鯖", string.IsNullOrEmpty(servers[i]) ? "―" : servers[i]);
+            if (checker.Count > 0) for (int i = 0; i < 10; i++) builder.AddField($"{i + 1}鯖", string.IsNullOrEmpty(servers[i]) ? "―" : servers[i], true);
             if (!string.IsNullOrEmpty(league)) builder.AddField(nowLeague ? "⚠アークスリーグ開催中⚠" : "アークスリーグ予定", league);
+			Console.WriteLine("Builded");
             return builder.Build();
         }
 

@@ -22,11 +22,8 @@ namespace EmgNotifyDiscordBot {
             EletuskDataGetter getter = new EletuskDataGetter(manager.Client);
             await getter.Stream();
 
-			Console.ReadLine();
-			await manager.Client.LogoutAsync();
-			Environment.Exit(0);
+			await Task.Delay(-1);
             
-
             //while (true) {
             //    string text = Console.ReadLine();
             //    if(text.StartsWith("%stop")) {
