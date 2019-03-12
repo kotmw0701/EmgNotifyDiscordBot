@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace EmgNotifyDiscordBot {
     public class EletuskDataGetter {
 
-        private bool betaTest = true;
+        private bool betaTest = false;
 
         private DiscordSocketClient dicordClient;
         private RestUserMessage restMessage;
@@ -48,7 +48,6 @@ namespace EmgNotifyDiscordBot {
 
         private async Task OnMessageRecieve(object sender, StreamUpdateEventArgs args) {
             if (args.Status.Account.AccountName != "elebot1st") return;
-			Console.WriteLine("Received");
 			string content = Regex.Replace(args.Status.Content.Replace("</p><p>", "|"), @"<(p|/p)>", "").Replace("<br />", "|");
 			if (content.IndexOf("|") < 0) return;
             string head = content.Substring(0, content.IndexOf("|"));
@@ -61,7 +60,6 @@ namespace EmgNotifyDiscordBot {
             else embedData = ParseData(content);
             restMessage = await dicordClient.GetGuild(427091125170601985).GetTextChannel(427101602093072384)
                                 .SendMessageAsync(betaTest ? "**現在テスト中です**" : "", false, CreateEmbed(embedData.notice, embedData.servers, embedData.league, embedData.nowLeague, embedData.isFollow));
-			Console.WriteLine("Sended");
 		}
 
         public Embed CreateEmbed(string notice, string[] servers, string league, bool nowLeague, bool isFollow) {
@@ -83,7 +81,6 @@ namespace EmgNotifyDiscordBot {
             checker.RemoveAll(check => string.IsNullOrEmpty(check));
             if (checker.Count > 0) for (int i = 0; i < 10; i++) builder.AddField($"{i + 1}鯖", string.IsNullOrEmpty(servers[i]) ? "―" : servers[i], true);
             if (!string.IsNullOrEmpty(league)) builder.AddField(nowLeague ? "⚠アークスリーグ開催中⚠" : "アークスリーグ予定", league);
-			Console.WriteLine("Builded");
             return builder.Build();
         }
 
