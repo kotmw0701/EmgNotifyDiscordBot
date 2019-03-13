@@ -20,7 +20,13 @@ namespace EmgNotifyDiscordBot {
             await manager.Enable();
 
             EletuskDataGetter getter = new EletuskDataGetter(manager.Client);
-            await getter.Stream();
+            await getter.StreamGenerate();
+
+			StreamingScheduler scheduler = new StreamingScheduler();
+			scheduler.OnEvent += async () => await getter.Start();
+			scheduler.OffEvent += () => getter.Stop();
+			scheduler.Start();
+
 
 			Console.ReadKey();
 			await manager.Client.LogoutAsync();

@@ -17,7 +17,11 @@ namespace EmgNotifyDiscordBot {
         private DiscordSocketClient dicordClient;
         private RestUserMessage restMessage;
 
+		private TimelineStreaming streaming;
+
         private (string notice, string[] servers, string league, bool nowLeague, bool isFollow) embedData;
+
+		private bool _nowStreaming = false;
 
         public EletuskDataGetter(DiscordSocketClient client) {
             this.dicordClient = client;
@@ -27,7 +31,7 @@ namespace EmgNotifyDiscordBot {
         /// EltuskのStreamingとメッセージの受け取りを開始する
         /// </summary>
         /// <returns></returns>
-        public async Task Stream() {
+        public async Task StreamGenerate() {
             var appRegistration = new AppRegistration() {
                 Instance = "eletusk.club",
                 ClientId = Configration.Instance.Datas.EletuskClientID,
@@ -39,12 +43,24 @@ namespace EmgNotifyDiscordBot {
 
             var client = new MastodonClient(appRegistration, auth);
 
-            var streaming = client.GetUserStreaming();
+            streaming = client.GetUserStreaming();
 
             streaming.OnUpdate += async (sender, e) => await OnMessageRecieve(sender, e);
-
-            await streaming.Start();
         }
+
+		public async Task Start() {
+			if (_nowStreaming)
+				return;
+			_nowStreaming = true;
+			await streaming.Start();
+		}
+
+		public void Stop() {
+			if (!_nowStreaming)
+				return;
+			_nowStreaming = false;
+			streaming.Stop();
+		}
 
         private async Task OnMessageRecieve(object sender, StreamUpdateEventArgs args) {
             if (args.Status.Account.AccountName != "elebot1st") return;
