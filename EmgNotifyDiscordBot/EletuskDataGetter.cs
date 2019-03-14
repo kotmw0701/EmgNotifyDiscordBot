@@ -10,12 +10,9 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace EmgNotifyDiscordBot {
-    public class EletuskDataGetter {
+    internal class EletuskDataGetter {
 
-        private bool betaTest = false;
-
-        private DiscordSocketClient dicordClient;
-        private RestUserMessage restMessage;
+        private DiscordManager discordManager;
 
 		private TimelineStreaming streaming;
 
@@ -23,8 +20,8 @@ namespace EmgNotifyDiscordBot {
 
 		private bool _nowStreaming = false;
 
-        public EletuskDataGetter(DiscordSocketClient client) {
-            this.dicordClient = client;
+        public EletuskDataGetter(DiscordManager manager) {
+            this.discordManager = manager;
         }
 
         /// <summary>
@@ -68,38 +65,15 @@ namespace EmgNotifyDiscordBot {
 			if (content.IndexOf("|") < 0) return;
             string head = content.Substring(0, content.IndexOf("|"));
             content = content.Substring(content.IndexOf("|") + 1, content.Length - content.IndexOf("|") - 1);
+			bool isFollow = false;
             if (Regex.IsMatch(head, $"{DateTime.Now.ToString("HH")}:\\d{{2}}続報")) {
                 embedData.isFollow = true;
                 embedData.servers = FollowData(Regex.Replace(content, @"<a.*/a>", ""), embedData.servers);
-                await restMessage.DeleteAsync();
+				isFollow = true;
             } else if (!head.Contains("PSO2緊急クエスト予告")) return;
             else embedData = ParseData(content);
-            restMessage = await dicordClient.GetGuild(427091125170601985).GetTextChannel(427101602093072384)
-                                .SendMessageAsync(betaTest ? "**現在テスト中です**" : "", false, CreateEmbed(embedData.notice, embedData.servers, embedData.league, embedData.nowLeague, embedData.isFollow));
+			await discordManager.SendMessageAsync(embedData, isFollow);
 		}
-
-        public Embed CreateEmbed(string notice, string[] servers, string league, bool nowLeague, bool isFollow) {
-            DateTime time = DateTime.Now;
-            Console.WriteLine($"Time    : {time.ToString("yyMMddHH")}");
-            Console.WriteLine($"Notice  : {notice.Replace(Environment.NewLine, " ")}");
-            Console.WriteLine($"Servers : [{string.Join(" , ", servers)}]");
-            Console.WriteLine($"League  : {league.Replace(Environment.NewLine, " ")}");
-            var builder = new EmbedBuilder {
-                Title = $"{time.AddHours(1).ToString("HH")} 時の緊急クエストです",
-                Description = isFollow ? "❗❗続報がありました❗❗" : "",
-                Color = betaTest ? Color.Red : Color.Gold,
-                Author = new EmbedAuthorBuilder().WithName("エレボット1号")
-                        .WithUrl(@"https://eletusk.club/@elebot1st")
-                        .WithIconUrl(@"https://eletusk.club/system/accounts/avatars/000/001/642/original/ec186395ae173203.png")
-            };
-			if (!string.IsNullOrEmpty(notice)) builder.AddField("予告緊急", notice);
-			List<string> checker = new List<string>(servers);
-            checker.RemoveAll(check => string.IsNullOrEmpty(check));
-            if (checker.Count > 0) for (int i = 0; i < 10; i++) builder.AddField($"{i + 1}鯖", string.IsNullOrEmpty(servers[i]) ? "―" : servers[i], true);
-            if (!string.IsNullOrEmpty(league)) builder.AddField(nowLeague ? "⚠アークスリーグ開催中⚠" : "アークスリーグ予定", league);
-            return builder.Build();
-        }
-
 
         public (string notice, string[] servers, string league, bool nowLeague, bool isFollow) ParseData(string text) {
             string[] brArray = text.Split("|");
