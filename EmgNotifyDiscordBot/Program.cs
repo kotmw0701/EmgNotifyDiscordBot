@@ -42,8 +42,8 @@ namespace EmgNotifyDiscordBot {
 								Console.WriteLine(channel.Topic);
 						}
 					}
-				} else if (text.StartsWith("%test")) {
-					manager.SendAnnounceAsync(text.Split(' ')[1]);
+				} else if (text.StartsWith("%announce")) {
+					manager.SendAnnounceAsync(text.Split(' ')[1], text.Split(' ')[2]);
 				}
 			}
 		}

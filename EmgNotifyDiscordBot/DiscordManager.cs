@@ -81,22 +81,34 @@ namespace EmgNotifyDiscordBot {
 			checker.RemoveAll(check => string.IsNullOrEmpty(check));
 			if (checker.Count > 0) for (int i = 0; i < 10; i++) builder.AddField($"{i + 1}鯖", string.IsNullOrEmpty(servers[i]) ? "―" : servers[i], true);
 			if (!string.IsNullOrEmpty(league)) builder.AddField(nowLeague ? "⚠アークスリーグ開催中⚠" : "アークスリーグ予定", league);
+			if (time.Hour == 12 || time.Hour == 0) {
+				builder.AddField($"{time.Hour}時の広告", "寄付はいつでも受け付けています！");
+				builder.ThumbnailUrl = "https://kotmw.com/images/qrcode.png";
+			}
 			return builder.Build();
 		}
 
 		public async Task SendMessageAsync((string notice, string[] servers, string league, bool nowLeague, bool isFollow) embedData, bool isFollow = false) {
 			if (isFollow)
 				foreach (var restMessage in restMessages) await restMessage.DeleteAsync();
-			var newRestMessages = (await Task.WhenAll(GetChannels().Select(channel => channel.SendMessageAsync("", false, CreateEmbed(embedData.notice, embedData.servers, embedData.league, embedData.nowLeague, embedData.isFollow))))).ToList();
+			Embed embed = CreateEmbed(embedData.notice, embedData.servers, embedData.league, embedData.nowLeague, embedData.isFollow);
+			var newRestMessages = (await Task.WhenAll(GetChannels().Select(channel => channel.SendMessageAsync(null, false, embed)))).ToList();
 			restMessages = newRestMessages;
 		}
 
-		public async void SendAnnounceAsync(string message) {
+		public async void SendAnnounceAsync(string title, string message) {
 			var builder = new EmbedBuilder() {
-				Title = "テスト",
-				Description = "テストembed"
+				Title = "お知らせ",
+				Description = $"{title} のお知らせです",
+				Color = Color.Orange,
+				Author = new EmbedAuthorBuilder()
+						.WithName("ことむー#9172")
+						.WithUrl("https://kotmw.com")
+						.WithIconUrl("https://kotmw.com/images/pso20181212_223415_030.png"),
+				Timestamp = new DateTimeOffset(DateTime.Now)
 			};
-			foreach (var channel in GetChannels()) await channel.SendMessageAsync(message, false, builder.Build());
+			builder.AddField(title, message);
+			foreach (var channel in GetChannels()) await channel.SendMessageAsync(null, false, builder.Build());
 		}
 	}
 }

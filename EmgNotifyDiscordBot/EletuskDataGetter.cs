@@ -49,6 +49,7 @@ namespace EmgNotifyDiscordBot {
 			if (_nowStreaming)
 				return;
 			_nowStreaming = true;
+			Console.WriteLine("Start");
 			await streaming.Start();
 		}
 
@@ -56,10 +57,12 @@ namespace EmgNotifyDiscordBot {
 			if (!_nowStreaming)
 				return;
 			_nowStreaming = false;
+			Console.WriteLine("Stop");
 			streaming.Stop();
 		}
 
         private async Task OnMessageRecieve(object sender, StreamUpdateEventArgs args) {
+			Console.WriteLine("Received");
             if (args.Status.Account.AccountName != "elebot1st") return;
 			string content = Regex.Replace(args.Status.Content.Replace("</p><p>", "|"), @"<(p|/p)>", "").Replace("<br />", "|");
 			if (content.IndexOf("|") < 0) return;
