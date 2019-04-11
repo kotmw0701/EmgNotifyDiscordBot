@@ -14,7 +14,9 @@ namespace EmgNotifyDiscordBot {
 
         private DiscordManager discordManager;
 
+		private MastodonClient client;
 		private TimelineStreaming streaming;
+		private DateTime latestTime;
 
         private (string notice, string[] servers, string league, bool nowLeague, bool isFollow) embedData;
 
@@ -38,11 +40,11 @@ namespace EmgNotifyDiscordBot {
             var authClient = new AuthenticationClient(appRegistration);
             var auth = await authClient.ConnectWithPassword(Configration.Instance.Datas.Email, Configration.Instance.Datas.Pass);
 
-            var client = new MastodonClient(appRegistration, auth);
+            client = new MastodonClient(appRegistration, auth);
 
             streaming = client.GetUserStreaming();
 
-            streaming.OnUpdate += async (sender, e) => await OnMessageRecieve(sender, e);
+            streaming.OnUpdate += async (sender, e) => await OnMessageRecieveAsync(sender, e);
         }
 
 		public async Task Start() {
@@ -50,6 +52,7 @@ namespace EmgNotifyDiscordBot {
 				return;
 			_nowStreaming = true;
 			Console.WriteLine("Start");
+			latestTime = DateTime.Now;
 			await streaming.Start();
 		}
 
@@ -61,20 +64,29 @@ namespace EmgNotifyDiscordBot {
 			streaming.Stop();
 		}
 
-        private async Task OnMessageRecieve(object sender, StreamUpdateEventArgs args) {
+		public async Task GetLatestAsync() {
+
+		}
+
+        private async Task OnMessageRecieveAsync(object sender, StreamUpdateEventArgs args) {
 			Console.WriteLine("Received");
             if (args.Status.Account.AccountName != "elebot1st") return;
-			string content = Regex.Replace(args.Status.Content.Replace("</p><p>", "|"), @"<(p|/p)>", "").Replace("<br />", "|");
+			await SendMessage(args.Status.Content, args.Status.CreatedAt);
+		}
+
+		public async Task SendMessage(string text, DateTime createdAt) {
+			if (latestTime.Equals(createdAt)) return;
+			string content = Regex.Replace(text.Replace("</p><p>", "|"), @"<(p|/p)>", "").Replace("<br />", "|");
 			if (content.IndexOf("|") < 0) return;
-            string head = content.Substring(0, content.IndexOf("|"));
-            content = content.Substring(content.IndexOf("|") + 1, content.Length - content.IndexOf("|") - 1);
+			string head = content.Substring(0, content.IndexOf("|"));
+			content = content.Substring(content.IndexOf("|") + 1, content.Length - content.IndexOf("|") - 1);
 			bool isFollow = false;
-            if (Regex.IsMatch(head, $"{DateTime.Now.ToString("HH")}:\\d{{2}}続報")) {
-                embedData.isFollow = true;
-                embedData.servers = FollowData(Regex.Replace(content, @"<a.*/a>", ""), embedData.servers);
+			if (Regex.IsMatch(head, $"{DateTime.Now.ToString("HH")}:\\d{{2}}続報")) {
+				embedData.isFollow = true;
+				embedData.servers = FollowData(Regex.Replace(content, @"<a.*/a>", ""), embedData.servers);
 				isFollow = true;
-            } else if (!head.Contains("PSO2緊急クエスト予告")) return;
-            else embedData = ParseData(content);
+			} else if (!head.Contains("PSO2緊急クエスト予告")) return;
+			else embedData = ParseData(content);
 			await discordManager.SendMessageAsync(embedData, isFollow);
 		}
 

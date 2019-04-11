@@ -16,9 +16,9 @@ namespace EmgNotifyDiscordBot {
 
 			timer.Elapsed += (sender, e) => {
 				var time = DateTime.Now;
-				if (time.Minute == 0) {
+				if (time.Minute >= 0) {
 					OnEvent();
-				} else if (time.Minute == 10) {
+				} else if (time.Minute > 10) {
 					OffEvent();
 				}
 			};
