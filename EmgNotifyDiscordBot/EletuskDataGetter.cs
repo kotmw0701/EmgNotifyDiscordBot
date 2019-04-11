@@ -5,6 +5,7 @@ using Mastonet;
 using Mastonet.Entities;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -65,7 +66,8 @@ namespace EmgNotifyDiscordBot {
 		}
 
 		public async Task GetLatestAsync() {
-
+			Status status = client.GetHomeTimeline().Result.First();
+			await SendMessage(status.Content, status.CreatedAt);
 		}
 
         private async Task OnMessageRecieveAsync(object sender, StreamUpdateEventArgs args) {

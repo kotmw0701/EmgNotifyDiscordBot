@@ -25,6 +25,7 @@ namespace EmgNotifyDiscordBot {
 			StreamingScheduler scheduler = new StreamingScheduler();
 			scheduler.OnEvent += async () => await getter.Start();
 			scheduler.OffEvent += () => getter.Stop();
+			scheduler.CheckEvent += async () => await getter.GetLatestAsync();
 			scheduler.Start();
 
 			while (true) {
