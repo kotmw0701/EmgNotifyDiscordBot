@@ -79,6 +79,7 @@ namespace EmgNotifyDiscordBot {
 
 		public async Task SendMessage(string text, DateTime createdAt) {
 			if (latestTime.Equals(createdAt)) return;
+			latestTime = createdAt;
 			string content = Regex.Replace(text.Replace("</p><p>", "|"), @"<(p|/p)>", "").Replace("<br />", "|");
 			if (content.IndexOf("|") < 0) return;
 			string head = content.Substring(0, content.IndexOf("|"));
