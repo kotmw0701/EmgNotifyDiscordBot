@@ -43,7 +43,9 @@ namespace EmgNotifyDiscordBot {
 
             client = new MastodonClient(appRegistration, auth);
 
-            streaming = client.GetUserStreaming();
+			latestTime = client.GetHomeTimeline().Result.First().CreatedAt;
+
+			streaming = client.GetUserStreaming();
 
             streaming.OnUpdate += async (sender, e) => await OnMessageRecieveAsync(sender, e);
         }
@@ -53,7 +55,6 @@ namespace EmgNotifyDiscordBot {
 				return;
 			_nowStreaming = true;
 			Console.WriteLine("Start");
-			latestTime = DateTime.Now;
 			await streaming.Start();
 		}
 
